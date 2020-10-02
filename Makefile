@@ -12,7 +12,7 @@ BUILD = build
 
 LINKER = linker.ld
 
-CXX_FLAGS = -mcpu=cortex-a53 -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -fpermissive -I $(INC)
+CXX_FLAGS = -mcpu=cortex-a53 -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -fpermissive -fno-exceptions -I $(INC)
 AS_FLAGS = -mcpu=cortex-a53 -I $(INC)
 
 all: clean $(BUILD) $(OUTPUT).img
