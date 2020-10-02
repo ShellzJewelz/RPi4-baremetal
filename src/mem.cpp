@@ -1,5 +1,6 @@
 #include "mem.h"
 #include "uart.h"
+#include "utils.h"
 #include "hw_config.h"
 
 #define MEM_SIZE (1024 * 1024 * 1024)
@@ -14,7 +15,6 @@ typedef struct mem_page
 static mem_page_t* first_page;
 static mem_page_t* last_page;
 
-static unsigned int inline mem_align(unsigned int address, unsigned int alignment);
 static mem_page_t* mem_page_find();
 
 void mem_init()
@@ -65,11 +65,6 @@ void kfree(void* ptr)
             page->allocated = false;
         }
     }
-}
-
-static unsigned int inline mem_align(unsigned int address, unsigned int alignment)
-{
-    return (address + (alignment - (address % alignment)));
 }
 
 static mem_page_t* mem_page_find()
