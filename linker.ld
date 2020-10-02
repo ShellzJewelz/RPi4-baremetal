@@ -2,9 +2,12 @@ SECTIONS
 {
     . = 0x80000;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
+    . = ALIGN(4096); /* align to page size */
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    . = ALIGN(4096); /* align to page size */
     PROVIDE(_data = .);
     .data : { *(.data .data.* .gnu.linkonce.d*) }
+    . = ALIGN(4096); /* align to page size */
     .bss (NOLOAD) : {
         . = ALIGN(16);
         __bss_start = .;
@@ -12,6 +15,7 @@ SECTIONS
         *(COMMON)
         __bss_end = .;
     }
+    . = ALIGN(4096); /* align to page size */
     _end = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
