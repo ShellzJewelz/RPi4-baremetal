@@ -42,7 +42,7 @@ OBJ_FILES += $(ASM_FILES:$(SRC)/%.S=$(BUILD)/%_s.o)
 
 $(OUTPUT).img: $(LINKER) $(OBJ_FILES) $(BUILD)
 	$(LD) -nostdlib -nostartfiles -T $(LINKER) -o $(OUTPUT).elf $(OBJ_FILES)
-	$(OBJCOPY) $(OUTPUT).elf $(OUTPUT).img
+	$(OBJCOPY) $(OUTPUT).elf -O binary $(OUTPUT).img
 
 QEMU = qemu-system-aarch64 -M raspi3 -m 1024M -kernel $(OUTPUT).img -serial null -serial stdio
 
