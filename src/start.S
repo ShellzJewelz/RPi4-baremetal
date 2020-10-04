@@ -15,7 +15,7 @@ b hang
 
 // set stack before our code
 setup_stack:
-ldr x1, =_start
+ldr x1, =_stack
 mov sp, x1
 
 // clear bss

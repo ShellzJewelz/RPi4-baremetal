@@ -16,8 +16,15 @@ SECTIONS
         __bss_end = .;
     }
     . = ALIGN(4096); /* align to page size */
-    _end = .;
-
+    PROVIDE(_heap = .);
+    . = 0x3BF80000;
+    . = ALIGN(4096); /* align to page size */
+    PROVIDE(_heap_end = .);
+    PROVIDE(_stack_end = .);
+    . = 0x3C000000;
+    . = ALIGN(4096); /* align to page size */
+    PROVIDE(_stack = .);
+    
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
