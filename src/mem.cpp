@@ -19,13 +19,15 @@ static mem_page_t* mem_page_find();
 
 void mem_init()
 {
-    extern unsigned char _end; // linker symbol for the end of kernel code
-    unsigned int mem_size = GPU_MEMORY_BASE - (unsigned int)(&_end);
+    extern unsigned char _heap; // linker symbol for the end of kernel code
+    extern unsigned char _stack; // linker symbol for the end of kernel code
+
+    unsigned int mem_size = (unsigned int)&(_stack) - (unsigned int)(&_heap);
     mem_size = mem_align(mem_size, MEM_PAGE_SIZE);
     unsigned int number_of_pages = mem_size / MEM_PAGE_SIZE;
 
-    first_page = (mem_page_t*)mem_align((unsigned int)(&_end), MEM_PAGE_SIZE);
-    last_page = (mem_page_t*) ((char*)first_page + (number_of_pages - 2) * MEM_PAGE_SIZE);
+    first_page = (mem_page_t*)(&_heap);
+    last_page = (mem_page_t*)((char*)first_page + (number_of_pages - 2) * MEM_PAGE_SIZE);
 
     for (char* current_page = (char*)first_page; current_page <= last_page; current_page += MEM_PAGE_SIZE)
     {
@@ -58,7 +60,7 @@ void kfree(void* ptr)
 
         if (page->page_base_address != page_ptr)
         {
-            uart_send_string("\nMemory currption occurred or bad ptr\n");
+            uart_puts("\nMemory currption occurred or bad ptr\n");
         }
         else
         {
