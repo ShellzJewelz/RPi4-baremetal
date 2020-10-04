@@ -53,13 +53,13 @@ void uart_init()
 /**
  * Send a character
  */
-void uart_send(unsigned int c) 
+void uart_putc(unsigned char c) 
 {
     /* wait until we can send */
     do
     {
         timer_wait_single_cycle();
-    } while (!(read32(UART1_MU_LSR) & 0x20));
+    } while (!(read32(UART1_MU_LSR) & (1 << 5)));
     /* write the character to the buffer */
     write32(UART1_MU_IO, c);
 }
@@ -67,7 +67,7 @@ void uart_send(unsigned int c)
 /**
  * Receive a character
  */
-char uart_recv() 
+char uart_getc() 
 {
     char r;
     /* wait until something is in the buffer */
@@ -84,22 +84,22 @@ char uart_recv()
 /**
  * Display a string
  */
-void uart_send_string(const char* s) 
+void uart_puts(const char* s) 
 {
     while(*s) 
     {
         /* convert newline to carrige return + newline */
         if(*s == '\n')
         {
-            uart_send('\r');
+            uart_putc('\r');
         }
 
-        uart_send(*s);
+        uart_putc(*s);
         s++;
     }
 }
 
-void uart_send_int(int number, int base)
+void uart_puti(int number, int base)
 {
     int remainder_index = 0;
     int remainder = 0;
@@ -107,13 +107,13 @@ void uart_send_int(int number, int base)
     
     if (number < 0 && base == 10)
     {
-        uart_send('-');
+        uart_putc('-');
         number = -number;
     }
 
     if (number == 0)
     {
-        uart_send('0');
+        uart_putc('0');
     }
 
     while (number != 0)
@@ -126,6 +126,6 @@ void uart_send_int(int number, int base)
 
     for (remainder_index -= 1; remainder_index >= 0; remainder_index--)
     {
-        uart_send(string[remainder_index]);
+        uart_putc(string[remainder_index]);
     }
 }

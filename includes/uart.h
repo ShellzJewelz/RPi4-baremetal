@@ -2,9 +2,9 @@
 #define UART_H
 
 void uart_init();
-void uart_send(unsigned int c);
-char uart_recv();
-void uart_send_string(const char* s);
-void uart_send_int(int number, int base);
+void uart_putc(unsigned char c);
+char uart_getc();
+void uart_puts(const char* s);
+void uart_puti(int number, int base);
 
 #endif // UART_H
