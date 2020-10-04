@@ -1,4 +1,5 @@
 build/
+exclude/
 .vscode/
 kernel8.img
 kernel8.elf
