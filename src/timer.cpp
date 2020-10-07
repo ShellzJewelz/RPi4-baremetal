@@ -1,9 +1,6 @@
 #include "timer.h"
 #include "hw_config.h"
 
-#define SYSTMR_LO ((volatile unsigned int*)(MMIO_BASE + 0x00003004))
-#define SYSTMR_HI ((volatile unsigned int*)(MMIO_BASE + 0x00003008))
-
 /**
  * Wait N CPU cycles (ARM CPU only)
  */
@@ -42,14 +39,14 @@ unsigned long int timer_get_system_timer()
     unsigned int timer_low = -1;
 
     // we must read MMIO area as two separate 32 bit reads
-    timer_high = *SYSTMR_HI;
-    timer_low = *SYSTMR_LO;
+    timer_high = *SYSTEM_TIMER_HIGH;
+    timer_low = *SYSTEM_TIMER_LOW;
 
     // we have to repeat it if high word changed during read
-    if(timer_high != *SYSTMR_HI) 
+    if(timer_high != *SYSTEM_TIMER_HIGH) 
     {
-        timer_high = *SYSTMR_HI;
-        timer_low = *SYSTMR_LO;
+        timer_high = *SYSTEM_TIMER_HIGH;
+        timer_low = *SYSTEM_TIMER_LOW;
     }
     
     // compose long int value

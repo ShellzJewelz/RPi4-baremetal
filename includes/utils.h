@@ -3,7 +3,7 @@
 
 void memcpy(void* dst, void* src, unsigned int size);
 
-unsigned int inline mem_align(unsigned int value, unsigned int alignment)
+unsigned int inline mem_align(unsigned long int value, unsigned int alignment)
 {
     return (value + ((alignment - 1) & ~(alignment - 1)));
 }

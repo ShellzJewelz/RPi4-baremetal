@@ -12,21 +12,22 @@ typedef struct mem_page
 static mem_page_t* first_page;
 static mem_page_t* last_page;
 
-static mem_page_t* mem_page_find();
+static mem_page_t* mem_page_alloc();
 
 void mem_init()
 {
     extern unsigned char _heap; // linker symbol for the end of kernel code
     extern unsigned char _stack; // linker symbol for the end of kernel code
 
-    unsigned int mem_size = (unsigned int)&(_stack) - (unsigned int)(&_heap);
+    unsigned long int mem_size = (unsigned long int)(&_stack - &_heap);
     mem_size = mem_align(mem_size, MEM_PAGE_SIZE);
-    unsigned int number_of_pages = mem_size / MEM_PAGE_SIZE;
+    unsigned long int number_of_pages = mem_size / MEM_PAGE_SIZE;
 
     first_page = (mem_page_t*)(&_heap);
     last_page = (mem_page_t*)((char*)first_page + (number_of_pages - 2) * MEM_PAGE_SIZE);
 
-    for (char* current_page = (char*)first_page; current_page <= last_page; current_page += MEM_PAGE_SIZE)
+    for (unsigned char* current_page = (unsigned char*)first_page; 
+            current_page <= (unsigned char*)last_page; current_page += MEM_PAGE_SIZE)
     {
         mem_page_t* page = (mem_page_t*)current_page;
         page->allocated = false;
@@ -36,7 +37,7 @@ void mem_init()
 
 void* mem_alloc()
 {
-    mem_page_t* page = mem_page_find();
+    mem_page_t* page = mem_page_alloc();
     void* ptr = nullptr;
 
     if (page != nullptr)
@@ -66,12 +67,13 @@ void mem_free(void* ptr)
     }
 }
 
-static mem_page_t* mem_page_find()
+static mem_page_t* mem_page_alloc()
 {
     mem_page_t* page;
     bool found = false;
 
-    for (char* current_page = (char*)first_page; current_page <= last_page && !found; current_page += MEM_PAGE_SIZE)
+    for (unsigned char* current_page = (unsigned char*)first_page; 
+            current_page <= (unsigned char*)last_page && !found; current_page += MEM_PAGE_SIZE)
     {
         page = (mem_page_t*)current_page;
         found = !page->allocated;

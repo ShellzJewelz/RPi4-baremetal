@@ -4,7 +4,8 @@
 #include "mailbox.h"
 
 /* PC Screen Font as used by Linux Console */
-typedef struct {
+typedef struct 
+{
     unsigned int magic;
     unsigned int version;
     unsigned int headersize;
@@ -18,7 +19,8 @@ typedef struct {
 extern volatile unsigned char _binary_font_psf_start;
 
 /* Scalable Screen Font (https://gitlab.com/bztsrc/scalable-font2) */
-typedef struct {
+typedef struct 
+{
     unsigned char  magic[4];
     unsigned int   size;
     unsigned char  type;
@@ -35,15 +37,19 @@ typedef struct {
 } __attribute__((packed)) sfn_t;
 extern volatile unsigned char _binary_font_sfn_start;
 
-unsigned int width, height, pitch;
-unsigned char *lfb;
+static unsigned int g_width, g_height, g_pitch;
+unsigned char *g_frame_buffer_base;
+psf_t *g_font;
+
+static void frame_buffer_display_character(unsigned char* glyph, unsigned int memory_offset);
 
 /**
  * Set screen resolution to 1024x768
  */ 
 void frame_buffer_init()
 {
-    unsigned int* mailbox_messages = (unsigned int*)mem_alloc();
+    unsigned int __attribute__((aligned(16))) mailbox_messages[36];
+    // unsigned int* mailbox_messages = (unsigned int*)mem_alloc();
 
     mailbox_messages[0] = 35*4;
     mailbox_messages[1] = MAILBOX_TYPE_REQUEST;
@@ -93,61 +99,80 @@ void frame_buffer_init()
         mailbox_messages[20] == 32 && mailbox_messages[28] != 0) 
     {
         mailbox_messages[28]&=0x3FFFFFFF;
-        width = mailbox_messages[5];
-        height = mailbox_messages[6];
-        pitch = mailbox_messages[33];
-        lfb = (void*)((unsigned long)mailbox_messages[28]);
+        g_width = mailbox_messages[5];
+        g_height = mailbox_messages[6];
+        g_pitch = mailbox_messages[33];
+        g_frame_buffer_base = (unsigned char*)((unsigned long int)mailbox_messages[28]);
+        g_font = (psf_t*)&_binary_font_psf_start;
     }
     else 
     {
         uart_puts("Unable to set screen resolution to 1024x768x32\n");
     }
 
-    mem_free(mailbox_messages);
+    //mem_free(mailbox_messages);
 }
 
 /**
  * Display a string using fixed size PSF
  */
-void frame_buffer_print(int x, int y, const char *s)
+void frame_buffer_print(unsigned int x, unsigned int y, const char *s)
 {
-    // get our font
-    psf_t *font = (psf_t*)&_binary_font_psf_start;
-    // draw next character if it's not zero
-    while(*s) {
-        // get the offset of the glyph. Need to adjust this to support unicode table
-        unsigned char *glyph = (unsigned char*)&_binary_font_psf_start +
-         font->headersize + (*((unsigned char*)s)<font->numglyph?*s:0)*font->bytesperglyph;
+    if (x > g_width - 1 || y > g_height - 1)
+    {
+        return;
+    }
+
+    while (*s) 
+    {
+        // get the offset of the glyph.
+        unsigned char* glyph = (unsigned char*)g_font + g_font->headersize + 
+            (*(unsigned char*)s < g_font->numglyph ? *s : 0) * g_font->bytesperglyph;
+        
         // calculate the offset on screen
-        int offs = (y * pitch) + (x * 4);
-        // variables
-        int i,j, line,mask, bytesperline=(font->width+7)/8;
+        unsigned int memory_offset = (y * g_pitch) + (x * 4);
+
         // handle carrige return
-        if(*s == '\r') {
+        if (*s == '\r') 
+        {
             x = 0;
-        } else
-        // new line
-        if(*s == '\n') {
-            x = 0; y += font->height;
-        } else {
-            // display a character
-            for(j=0;j<font->height;j++){
-                // display one row
-                line=offs;
-                mask=1<<(font->width-1);
-                for(i=0;i<font->width;i++){
-                    // if bit set, we use white color, otherwise black
-                    *((unsigned int*)(lfb + line))=((int)*glyph) & mask?0xFFFFFF:0;
-                    mask>>=1;
-                    line+=4;
-                }
-                // adjust to next line
-                glyph+=bytesperline;
-                offs+=pitch;
-            }
-            x += (font->width+1);
+        } 
+        else if (*s == '\n') 
+        {
+            x = 0; 
+            y += g_font->height;
+        } 
+        else 
+        {
+            frame_buffer_display_character(glyph, memory_offset);
+
+            x += (g_font->width + 1);
         }
         // next character
         s++;
+    }
+}
+
+static void frame_buffer_display_character(unsigned char* glyph, unsigned int memory_offset)
+{
+    // variables
+    unsigned int line,mask, bytesperline=(g_font->width + 7) / 8;
+
+    for (unsigned int j = 0; j < g_font->height; j++)
+    {
+        // display one row
+        line = memory_offset;
+        mask = 1 << (g_font->width - 1);
+        for (unsigned int i = 0; i < g_font->width; i++)
+        {
+            // if bit set, we use white color, otherwise black
+            *((unsigned int*)(g_frame_buffer_base + line)) = ((int)*glyph) & mask ? 0xFFFFFF : 0;
+            mask >>= 1;
+            line += 4;
+        }
+
+        // adjust to next line
+        glyph += bytesperline;
+        memory_offset += g_pitch;
     }
 }
