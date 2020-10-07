@@ -1,6 +1,6 @@
 PREFIX = aarch64-none-elf
 LD = $(PREFIX)-ld
-AS = $(PREFIX)-as
+AS = $(PREFIX)-gcc
 GCC = $(PREFIX)-gcc
 GPP = $(PREFIX)-g++
 OBJCOPY = $(PREFIX)-objcopy
@@ -12,7 +12,24 @@ BUILD = build
 
 LINKER = linker.ld
 
-CXX_FLAGS = -mcpu=cortex-a53 -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -fpermissive -fno-exceptions -I $(INC)
+CXX_FLAGS = -mcpu=cortex-a53
+CXX_FLAGS += -Wall
+CXX_FLAGS += -O2
+CXX_FLAGS += -ffreestanding
+CXX_FLAGS += -nostdinc
+CXX_FLAGS += -nostdlib
+CXX_FLAGS += -nostartfiles
+CXX_FLAGS += -fpermissive
+# Disable trying to use exceotion table
+# and disalbe g++ inserting guards for statics
+# and disable automatic object destruction at exit
+# as we don't have standard libs implementing it (libc)
+CXX_FLAGS += -fno-exceptions 
+CXX_FLAGS += -fno-threadsafe-statics 
+CXX_FLAGS += -fno-use-cxa-atexit
+# Includes
+CXX_FLAGS += -I $(INC)
+
 AS_FLAGS = -mcpu=cortex-a53 -I $(INC)
 
 all: clean $(BUILD) $(OUTPUT).img
@@ -33,18 +50,22 @@ $(BUILD)/%_cpp.o: $(SRC)/%.cpp $(BUILD)
 $(BUILD)/%_s.o: $(SRC)/%.S $(BUILD)
 	$(AS) $(AS_FLAGS) -c $< -o $@
 
+$(BUILD)/font_psf.o: font.psf
+	$(LD) -r -b binary -o $(BUILD)/font_psf.o font.psf
+
 C_FILES = $(wildcard $(SRC)/*.c)
 CPP_FILES = $(wildcard $(SRC)/*.cpp)
 ASM_FILES = $(wildcard $(SRC)/*.S)
 OBJ_FILES = $(C_FILES:$(SRC)/%.c=$(BUILD)/%_c.o)
 OBJ_FILES = $(CPP_FILES:$(SRC)/%.cpp=$(BUILD)/%_cpp.o)
 OBJ_FILES += $(ASM_FILES:$(SRC)/%.S=$(BUILD)/%_s.o)
+OBJ_FILES += $(BUILD)/font_psf.o
 
 $(OUTPUT).img: $(LINKER) $(OBJ_FILES) $(BUILD)
 	$(LD) -nostdlib -nostartfiles -T $(LINKER) -o $(OUTPUT).elf $(OBJ_FILES)
 	$(OBJCOPY) $(OUTPUT).elf -O binary $(OUTPUT).img
 
-QEMU = qemu-system-aarch64 -M raspi3 -m 1024M -kernel $(OUTPUT).img -serial null -serial stdio
+QEMU = qemu-system-aarch64 -smp 4 -M raspi3 -m 1024M -kernel $(OUTPUT).img -serial null -serial stdio
 
 debug:
 	$(QEMU) -s -d in_asm
