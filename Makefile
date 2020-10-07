@@ -7,7 +7,7 @@ OBJCOPY = $(PREFIX)-objcopy
 
 OUTPUT = kernel8
 SRC = src
-INC = includes
+INC = include
 BUILD = build
 
 LINKER = linker.ld
