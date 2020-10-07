@@ -2,7 +2,7 @@
 #define MEM_H
 
 void mem_init();
-void* kalloc();
-void kfree(void* ptr);
+void* mem_alloc();
+void mem_free(void* ptr);
 
 #endif // MEM_H

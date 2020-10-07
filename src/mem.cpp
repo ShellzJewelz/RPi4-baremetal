@@ -37,7 +37,7 @@ void mem_init()
     }
 }
 
-void* kalloc()
+void* mem_alloc()
 {
     mem_page_t* page = mem_page_find();
     void* ptr = nullptr;
@@ -51,7 +51,7 @@ void* kalloc()
     return ptr;
 }
 
-void kfree(void* ptr)
+void mem_free(void* ptr)
 {
     if (ptr != nullptr)
     {
