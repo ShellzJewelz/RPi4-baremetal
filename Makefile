@@ -9,6 +9,7 @@ OUTPUT = kernel8
 SRC = src
 INC = include
 BUILD = build
+TOOLCHAIN = /storage/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/lib/gcc/aarch64-none-elf/9.2.1
 
 LINKER = linker.ld
 
@@ -24,12 +25,12 @@ CXX_FLAGS += -fpermissive
 # and disalbe g++ inserting guards for statics
 # and disable automatic object destruction at exit
 # as we don't have standard libs implementing it (libc)
-CXX_FLAGS += -fno-exceptions 
+CXX_FLAGS += -fno-exceptions
 CXX_FLAGS += -fno-rtti
-CXX_FLAGS += -fno-threadsafe-statics 
-CXX_FLAGS += -fno-use-cxa-atexit
+CXX_FLAGS += -fno-threadsafe-statics
 # Includes
 CXX_FLAGS += -I $(INC)
+CXX_FLAGS += -I $(TOOLCHAIN)/include
 
 AS_FLAGS = -mcpu=cortex-a53 -I $(INC)
 
@@ -66,7 +67,7 @@ $(OUTPUT).img: $(LINKER) $(OBJ_FILES) $(BUILD)
 	$(LD) -nostdlib -nostartfiles -T $(LINKER) -o $(OUTPUT).elf $(OBJ_FILES)
 	$(OBJCOPY) $(OUTPUT).elf -O binary $(OUTPUT).img
 
-QEMU = qemu-system-aarch64 -smp 4 -M raspi3 -m 1024M -kernel $(OUTPUT).img -serial null -serial stdio
+QEMU = qemu-system-aarch64 -smp 4 -M raspi3 -m 1024M -kernel $(OUTPUT).elf -serial null -serial stdio
 
 debug:
 	$(QEMU) -s -d in_asm
