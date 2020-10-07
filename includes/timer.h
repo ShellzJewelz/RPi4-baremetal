@@ -4,7 +4,7 @@
 /**
  * Wait Single CPU cycle (ARM CPU only)
  */
-inline void timer_wait_single_cycle()
+void inline timer_wait_single_cycle()
 {
     asm volatile("nop");
 }
