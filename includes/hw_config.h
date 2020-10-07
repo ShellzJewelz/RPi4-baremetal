@@ -1,12 +1,16 @@
 #ifndef HW_CONFIG_H
 #define HW_CONFIG_H
 
-#define MMIO_BASE         (0x3F000000)
+#define MMIO_BASE         ((void*)(0x3F000000))
+#define VIDEOCORE_MAILBOX ((void*)(MMIO_BASE + 0xB880))
+#define SOC_MAILBOX       ((void*)(MMIO_BASE + 0xB8A0))
 
 #define GPU_MEMORY_SIZE   (48 * 1024 * 1024)
 #define GPU_MEMORY_BASE   (MMIO_BASE - GPU_MEMORY_SIZE)
 
-#define GPIO_BASE         (MMIO_BASE + 0x00200000)
+#define MEM_PAGE_SIZE     (4 * 1024)
+
+#define GPIO_BASE         ((void*)(MMIO_BASE + 0x00200000))
 #define GPIO_GPFSEL0      ((void*)(GPIO_BASE + 0x00))
 #define GPIO_GPFSEL1      ((void*)(GPIO_BASE + 0x04)) 
 #define GPIO_GPFSEL2      ((void*)(GPIO_BASE + 0x08)) 
@@ -59,8 +63,5 @@
 #define UART1_MU_CNTL     ((void*)(MMIO_BASE + 0x00215060))
 #define UART1_MU_STAT     ((void*)(MMIO_BASE + 0x00215064))
 #define UART1_MU_BAUD     ((void*)(MMIO_BASE + 0x00215068))
-
-#define VIDEOCORE_MAILBOX (MMIO_BASE + 0x0000B880)
-#define SOC_MAILBOX       (MMIO_BASE + 0x0000B8A0)
 
 #endif // HW_CONFIG_H

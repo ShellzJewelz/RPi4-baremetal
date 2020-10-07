@@ -3,9 +3,6 @@
 #include "utils.h"
 #include "hw_config.h"
 
-#define MEM_SIZE (1024 * 1024 * 1024)
-#define MEM_PAGE_SIZE (4 * 1024)
-
 typedef struct mem_page
 {
     bool allocated;
