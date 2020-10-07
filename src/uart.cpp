@@ -5,7 +5,7 @@
 /**
  * Set baud rate and characteristics (8N1) and map to GPIO
  */
-void uart_init()
+void uart_init(unsigned int baud_rate)
 {
     register unsigned int r;
 
@@ -23,7 +23,8 @@ void uart_init()
     // Enable FIFO, Clear FIFO
     write32(UART1_MU_IIR, 0xC6);   
     // 115200 = system clock 250MHz / (8 * (baud + 1)), baud = 270
-    write32(UART1_MU_BAUD, 270);
+    r = ((250000000 / baud_rate) / 8) - 1;
+    write32(UART1_MU_BAUD, r);
 
     /* map UART1 to GPIO pins */
     r = read32(GPIO_GPFSEL1);
@@ -127,5 +128,16 @@ void uart_puti(int number, int base)
     for (remainder_index -= 1; remainder_index >= 0; remainder_index--)
     {
         uart_putc(string[remainder_index]);
+    }
+}
+
+void uart_putmem(const unsigned char* src, unsigned int size, int base)
+{
+    while (size)
+    {
+        uart_puti(*src, base);
+        uart_putc(' ');
+        src++;
+        size--;
     }
 }
