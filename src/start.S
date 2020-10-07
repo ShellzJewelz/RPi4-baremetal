@@ -52,8 +52,8 @@ clear_bss_loop:
 	sub w2, w2, #1
 	cbnz w2, clear_bss_loop
 
-// jump to C code, should not return
 kernel_entry:
+	bl GlobalInitialize
 	bl kernel_main
 	// for failsafe, halt this core too
 	b hang

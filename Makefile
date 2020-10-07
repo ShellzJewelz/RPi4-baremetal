@@ -25,6 +25,7 @@ CXX_FLAGS += -fpermissive
 # and disable automatic object destruction at exit
 # as we don't have standard libs implementing it (libc)
 CXX_FLAGS += -fno-exceptions 
+CXX_FLAGS += -fno-rtti
 CXX_FLAGS += -fno-threadsafe-statics 
 CXX_FLAGS += -fno-use-cxa-atexit
 # Includes
