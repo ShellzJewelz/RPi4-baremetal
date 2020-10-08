@@ -18,30 +18,14 @@ typedef struct
 } __attribute__((packed)) psf_t;
 extern volatile unsigned char _binary_font_psf_start;
 
-/* Scalable Screen Font (https://gitlab.com/bztsrc/scalable-font2) */
-typedef struct 
-{
-    unsigned char  magic[4];
-    unsigned int   size;
-    unsigned char  type;
-    unsigned char  features;
-    unsigned char  width;
-    unsigned char  height;
-    unsigned char  baseline;
-    unsigned char  underline;
-    unsigned short fragments_offs;
-    unsigned int   characters_offs;
-    unsigned int   ligature_offs;
-    unsigned int   kerning_offs;
-    unsigned int   cmap_offs;
-} __attribute__((packed)) sfn_t;
-extern volatile unsigned char _binary_font_sfn_start;
-
 static unsigned int g_width, g_height, g_pitch;
-unsigned char *g_frame_buffer_base;
+unsigned char *g_frame_buffer_base, *g_frame_buffer_end;
+unsigned int x, y;
 psf_t *g_font;
 
-static void frame_buffer_display_character(unsigned char* glyph, unsigned int memory_offset);
+static inline unsigned char* frame_buffer_char_to_glyph(const unsigned char c);
+static void frame_buffer_display_glyph(unsigned char* glyph, unsigned int memory_offset);
+static void frame_buffer_scroll_up();
 
 /**
  * Set screen resolution to 1024x768
@@ -103,7 +87,10 @@ void frame_buffer_init()
         g_height = mailbox_messages[6];
         g_pitch = mailbox_messages[33];
         g_frame_buffer_base = (unsigned char*)((unsigned long int)mailbox_messages[28]);
+        g_frame_buffer_end = g_frame_buffer_base + (((g_height - 1) * g_pitch) + (g_width * 4));
         g_font = (psf_t*)&_binary_font_psf_start;
+        x = 0;
+        y = 0;
     }
     else 
     {
@@ -113,50 +100,76 @@ void frame_buffer_init()
     //mem_free(mailbox_messages);
 }
 
-/**
- * Display a string using fixed size PSF
- */
-void frame_buffer_print(unsigned int x, unsigned int y, const char *s)
+void frame_buffer_putc(const char c)
 {
-    if (x > g_width - 1 || y > g_height - 1)
+    // handle carrige return
+    if (c == '\r') 
     {
-        return;
-    }
+        x = 0;
+    } 
+    else if (c == '\n') 
+    {
+        x = 0; 
+        y += g_font->height;
 
-    while (*s) 
+        if (y == g_width - 1)
+        {
+            y -= g_font->height;
+            frame_buffer_scroll_up();
+        }
+    } 
+    else 
     {
         // get the offset of the glyph.
-        unsigned char* glyph = (unsigned char*)g_font + g_font->headersize + 
-            (*(unsigned char*)s < g_font->numglyph ? *s : 0) * g_font->bytesperglyph;
+        unsigned char* glyph = frame_buffer_char_to_glyph(c);
         
         // calculate the offset on screen
         unsigned int memory_offset = (y * g_pitch) + (x * 4);
 
-        // handle carrige return
-        if (*s == '\r') 
-        {
-            x = 0;
-        } 
-        else if (*s == '\n') 
-        {
-            x = 0; 
-            y += g_font->height;
-        } 
-        else 
-        {
-            frame_buffer_display_character(glyph, memory_offset);
+        frame_buffer_display_glyph(glyph, memory_offset);
 
-            x += (g_font->width + 1);
-        }
-        // next character
+        x += (g_font->width + 1);
+    }
+}
+
+/**
+ * Display a string using fixed size PSF
+ */
+void frame_buffer_puts(const char* s)
+{
+    if (x > g_width - 1)
+    {
+        return;
+    }
+
+    if (y > g_height - 1)
+    {
+        frame_buffer_scroll_up();
+        y = (g_height - 1) - g_font->height;
+    }
+
+    while (*s) 
+    {
+        frame_buffer_putc(*s);
         s++;
     }
 }
 
-static void frame_buffer_display_character(unsigned char* glyph, unsigned int memory_offset)
+static inline unsigned char* frame_buffer_char_to_glyph(const unsigned char c)
+{
+    unsigned char* glyph = (unsigned char*)g_font + g_font->headersize;
+    if (c < g_font->numglyph)
+    {
+        glyph += (g_font->bytesperglyph * c);
+    }
+
+    return glyph;
+}
+
+static void frame_buffer_display_glyph(unsigned char* glyph, unsigned int memory_offset)
 {
     // variables
-    unsigned int line,mask, bytesperline=(g_font->width + 7) / 8;
+    unsigned int line,mask, bytesperline = (g_font->width + 7) / 8;
 
     for (unsigned int j = 0; j < g_font->height; j++)
     {
@@ -174,5 +187,24 @@ static void frame_buffer_display_character(unsigned char* glyph, unsigned int me
         // adjust to next line
         glyph += bytesperline;
         memory_offset += g_pitch;
+    }
+}
+
+static void frame_buffer_scroll_up()
+{
+    unsigned char* frame_buffer_from = g_frame_buffer_base + ((g_font->height * g_pitch) + (0 * 4));
+    unsigned char* frame_buffer_to = g_frame_buffer_base + ((0 * g_pitch) + (0 * 4));
+    unsigned char* frame_buffer_line_before_last = g_frame_buffer_base + (((g_height - 1 - g_font->height) * g_pitch) + (0 * 4));
+
+    // Scroll all lines by 1 line up
+    for (; frame_buffer_from != g_frame_buffer_end; frame_buffer_to += 1, frame_buffer_from += 1)
+    {
+        *frame_buffer_to = *frame_buffer_from;
+    }
+
+    // Clear the last line
+    for (; frame_buffer_line_before_last != g_frame_buffer_end; frame_buffer_line_before_last += 1)
+    {
+        *frame_buffer_line_before_last = 0x0;
     }
 }

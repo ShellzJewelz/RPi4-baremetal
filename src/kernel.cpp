@@ -9,7 +9,7 @@ extern "C" void kernel_main(unsigned long int cpu_id)
     mem_init();
     frame_buffer_init();
 
-    frame_buffer_print(80, 80, "Hello World!\n");
+    frame_buffer_puts("Hello World!\n");
 
     while (true) 
     {
