@@ -17,7 +17,6 @@ hang:
 	b hang
 
 master:
-/*
 	ldr	x0, =SCTLR_VALUE_MMU_DISABLED
 	msr	sctlr_el1, x0		
 
@@ -35,7 +34,6 @@ master:
 
 	eret			
 el1_entry:
-*/
 
 // set stack before our code
 setup_stack:
