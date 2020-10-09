@@ -7,6 +7,8 @@
         const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
         (type *)( (char *)__mptr - offsetof(type,member) );})
 
+#define BIT(x) ((1 << x))
+
 void memcpy(void* dst, void* src, unsigned int size);
 
 unsigned int inline mem_align(unsigned long int value, unsigned int alignment)
