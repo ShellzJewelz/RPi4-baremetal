@@ -33,7 +33,7 @@ void timer_wait_msec(unsigned int n)
 /**
  * Get System Timer's counter
  */
-unsigned long int timer_get_system_timer()
+unsigned long int timer_get_system_time()
 {
     unsigned int timer_high = -1;
     unsigned int timer_low = -1;
@@ -58,12 +58,12 @@ unsigned long int timer_get_system_timer()
  */
 void timer_wait_msec_st(unsigned int n)
 {
-    unsigned long int system_time = timer_get_system_timer();
+    unsigned long int system_time = timer_get_system_time();
     // we must check if it's non-zero, because qemu does not emulate
     // system timer, and returning constant zero would mean infinite loop
     if (system_time)
     {
-        while (timer_get_system_timer() < system_time + n)
+        while (timer_get_system_time() < system_time + n)
         {
 
         }
