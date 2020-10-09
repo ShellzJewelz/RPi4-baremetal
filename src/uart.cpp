@@ -100,7 +100,7 @@ void uart_puts(const char* s)
     }
 }
 
-void uart_puti(int number, int base)
+void uart_puti(long int number, int base)
 {
     int remainder_index = 0;
     int remainder = 0;
