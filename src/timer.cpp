@@ -1,5 +1,6 @@
 #include "timer.h"
 #include "hw_config.h"
+#include "uart.h"
 
 /**
  * Wait N CPU cycles (ARM CPU only)
@@ -39,33 +40,16 @@ unsigned long int timer_get_system_time()
     unsigned int timer_low = -1;
 
     // we must read MMIO area as two separate 32 bit reads
-    timer_high = *SYSTEM_TIMER_HIGH;
-    timer_low = *SYSTEM_TIMER_LOW;
+    timer_high = *TIMER_HIGH;
+    timer_low = *TIMER_LOW;
 
     // we have to repeat it if high word changed during read
-    if(timer_high != *SYSTEM_TIMER_HIGH) 
+    if(timer_high != *TIMER_HIGH) 
     {
-        timer_high = *SYSTEM_TIMER_HIGH;
-        timer_low = *SYSTEM_TIMER_LOW;
+        timer_high = *TIMER_HIGH;
+        timer_low = *TIMER_LOW;
     }
     
     // compose long int value
     return ((unsigned long int) timer_high << 32) | timer_low;
-}
-
-/**
- * Wait N microsec (with BCM System Timer)
- */
-void timer_wait_msec_st(unsigned int n)
-{
-    unsigned long int system_time = timer_get_system_time();
-    // we must check if it's non-zero, because qemu does not emulate
-    // system timer, and returning constant zero would mean infinite loop
-    if (system_time)
-    {
-        while (timer_get_system_time() < system_time + n)
-        {
-
-        }
-    }
 }
