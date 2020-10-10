@@ -65,6 +65,9 @@ el1_entry:
 	orr x0, x0, #(1 << 11)
 	msr	sctlr_el1, x0
 
+    mov x0, #CPACR_EL1_VALUE
+    msr cpacr_el1, x0
+
 // set stack before our code
 setup_stack:
 	mov sp, x1
