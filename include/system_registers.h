@@ -77,4 +77,7 @@
                          SCTLR_EL1_RES0 | SCTLR_EL1_NTWE | SCTLR_EL1_EOE | SCTLR_EL1_EE | SCTLR_EL1_UCI | \
                          SCTLR_EL1_ENDA | SCTLR_RES1)
 
+#define CPACR_EL1_FPEN (3 << 20) // SVE, Advanced SIMD, and floating-point registers are enabled
+#define CPACR_EL1_VALUE (CPACR_EL1_FPEN)
+
 #endif // SYSTEM_REGISTERS_H
