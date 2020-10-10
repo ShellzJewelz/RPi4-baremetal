@@ -13,10 +13,7 @@ void timer_wait_cycles(unsigned int n)
     }
 }
 
-/**
- * Wait N microsec (ARM CPU only)
- */
-void timer_wait_msec(unsigned int n)
+void timer_wait_usec(unsigned int n)
 {
     register unsigned long frequency, end_system_time, current_system_time;
     // get the current counter frequency
@@ -29,6 +26,11 @@ void timer_wait_msec(unsigned int n)
     {
         asm volatile ("mrs %0, cntpct_el0" : "=r"(current_system_time));
     } while(current_system_time < end_system_time);
+}
+
+void timer_wait_millisec(unsigned int n)
+{
+    timer_wait_usec(n * 1000);
 }
 
 /**
