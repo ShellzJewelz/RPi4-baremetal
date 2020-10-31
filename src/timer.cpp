@@ -1,6 +1,5 @@
 #include "timer.h"
 #include "hw_config.h"
-#include "uart.h"
 
 /**
  * Wait N CPU cycles (ARM CPU only)
@@ -28,7 +27,7 @@ void timer_wait_usec(unsigned int n)
     } while(current_system_time < end_system_time);
 }
 
-void timer_wait_millisec(unsigned int n)
+void timer_wait_msec(unsigned int n)
 {
     timer_wait_usec(n * 1000);
 }
