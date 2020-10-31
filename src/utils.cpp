@@ -1,13 +1,31 @@
 #include "utils.h"
 
-void memcpy(void* dst, void* src, unsigned int size)
+void memcpy(void* dst, void* src, unsigned long int size)
 {
-    char* temp_dst = (char*)dst;
-    char* temp_src = (char*)src;
-
-    while (size)
+    if (size % sizeof(unsigned long int) == 0)
     {
-        *temp_dst = *temp_src;
-        size--;
+        unsigned long int* temp_dst = (unsigned long int*)dst;
+        unsigned long int* temp_src = (unsigned long int*)src;
+
+        while (size)
+        {
+            *temp_dst = *temp_src;
+            size -= sizeof(unsigned long int);
+            temp_dst++;
+            temp_src++;
+        }
+    }
+    else
+    {
+        unsigned char* temp_dst = (unsigned char*)dst;
+        unsigned char* temp_src = (unsigned char*)src;
+
+        while (size)
+        {
+            *temp_dst = *temp_src;
+            size--;
+            temp_dst++;
+            temp_src++;
+        }
     }
 }

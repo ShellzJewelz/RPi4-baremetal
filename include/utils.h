@@ -9,15 +9,25 @@
 
 #define BIT(x) ((1 << x))
 
-void memcpy(void* dst, void* src, unsigned int size);
+#define ARRAY_LENGTH(a) ((sizeof(a) / sizeof(*a)))
 
 unsigned int inline mem_align(unsigned long int value, unsigned int alignment)
 {
     return (value + ((alignment - 1) & ~(alignment - 1)));
 }
 
-extern "C" unsigned long int get_el();
+extern "C" inline unsigned long int get_el()
+{
+    register unsigned long int el;
+    asm ("mrs %0, CurrentEL \n"
+         "lsr %0, %0, #2 \n" : "=r"(el));
+    return el;
+}
+
+void memcpy(void* dst, void* src, unsigned long int size);
+
 extern "C" void memzero(void* dst, unsigned int size);
+extern "C" void* memset(void* dst, int value, unsigned int size);
 extern "C" void write32(void* dst, unsigned int value);
 extern "C" unsigned int read32(void* dst);
 
