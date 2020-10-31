@@ -1,11 +1,66 @@
 #ifndef HW_CONFIG_H
 #define HW_CONFIG_H
 
+#define ENDIANNESS_LITTLE (0)
+#define ENDIANNESS_BIG (1)
+#define ENDIANNESS ENDIANNESS_LITTLE
+
+#define DEBUG_HARDWARE_NO_HARDWARE (0)
+#define DEBUG_HARDWARE_DISPLAY_HARDWARE (1)
+#define DEBUG_HARDWARE_VIRTUAL_HARDWARE (2)
+#define DEBUG_HARDWARE DEBUG_HARDWARE_DISPLAY_HARDWARE
+
+#define RPI_VERSION_3 (3)
+#define RPI_VERSION_4 (4)
+
+#if RPI_VERSION == RPI_VERSION_3
+#define MMIO_BASE                   ((void*)(0x3F000000))
+#define GPU_CORE_FREQUENCY          (250000000)
+#elif RPI_VERSION == RPI_VERSION_4
+#define MMIO_BASE                   ((void*)(0xFE000000))
+#define GPU_CORE_FREQUENCY          (2 * 250000000)
+#else
+#error "Unknown RPi Version"
+#endif // RPI_VERSION == RPI_VERSION_3
+
+#if DEBUG_HARDWARE == DEBUG_HARDWARE_DISPLAY_HARDWARE
+#include "printf.h"
+#include "frame_buffer.h"
+#define putc frame_buffer_putc
+#define puts frame_buffer_puts
+#elif DEBUG_HARDWARE == DEBUG_HARDWARE_VIRTUAL_HARDWARE
+#include "printf.h"
+#include "uart.h"
+#define putc uart_putc
+#define puts uart_puts
+#else
+void inline dummy_printf(const char*, ...) {}
+void dummy_sprintf(char*,const char *, ...) {}
+void inline dummy_putc(const char) {}
+void inline dummy_puts(const char*) {}
+#define printf dummy_printf
+#define sprintf dummy_sprintf
+#define putc dummy_putc
+#define puts dummy_puts
+#endif // DEBUG_HARDWARE == DEBUG_HARDWARE_DISPLAY_HARDWARE
+
 #define MEM_PAGE_SIZE               (4 * 1024)
 
-#define MMIO_BASE                   ((void*)(0x3F000000))
 #define VIDEOCORE_MAILBOX           ((void*)((unsigned char*)MMIO_BASE + 0xB880))
+#define VIDEOCORE_MAILBOX_READ      ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x00))
+#define VIDEOCORE_MAILBOX_POLL      ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x10))
+#define VIDEOCORE_MAILBOX_SENDER    ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x14))
+#define VIDEOCORE_MAILBOX_STATUS    ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x18))
+#define VIDEOCORE_MAILBOX_CONFIG    ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x1C))
+#define VIDEOCORE_MAILBOX_WRITE     ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x20))
+
 #define SOC_MAILBOX                 ((void*)((unsigned char*)MMIO_BASE + 0xB8A0))
+#define SOC_MAILBOX_READ            ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x00))
+#define SOC_MAILBOX_POLL            ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x10))
+#define SOC_MAILBOX_SENDER          ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x14))
+#define SOC_MAILBOX_STATUS          ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x18))
+#define SOC_MAILBOX_CONFIG          ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x1C))
+#define SOC_MAILBOX_WRITE           ((unsigned int*)((unsigned char*)VIDEOCORE_MAILBOX + 0x20))
 
 #define IRQ_BASIC_PENDING           ((void*)((unsigned char*)MMIO_BASE + 0x0000B200))
 #define IRQ_PENDING_1	            ((void*)((unsigned char*)MMIO_BASE + 0x0000B204))
@@ -68,17 +123,19 @@
 #define UART0_ITOP                  ((unsigned int*)(unsigned char*)UART0_BASE + 0x88)
 #define UART0_TDR                   ((unsigned int*)(unsigned char*)UART0_BASE + 0x8C)
 
-#define UART1_ENABLE                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215004))
-#define UART1_MU_IO                 ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215040))
-#define UART1_MU_IER                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215044))
-#define UART1_MU_IIR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215048))
-#define UART1_MU_LCR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x0021504C))
-#define UART1_MU_MCR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215050))
-#define UART1_MU_LSR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215054))
-#define UART1_MU_MSR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215058))
-#define UART1_MU_SCRATCH            ((unsigned int*)((unsigned char*)MMIO_BASE + 0x0021505C))
-#define UART1_MU_CNTL               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215060))
-#define UART1_MU_STAT               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215064))
-#define UART1_MU_BAUD               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215068))
+#define UART1_BASE                  ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00215000))
+#define UART1_IRQ                   ((unsigned int*)((unsigned char*)MMIO_BASE + 0x00))
+#define UART1_ENABLE                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x04))
+#define UART1_MU_IO                 ((unsigned int*)((unsigned char*)MMIO_BASE + 0x40))
+#define UART1_MU_IER                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x44))
+#define UART1_MU_IIR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x48))
+#define UART1_MU_LCR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x4C))
+#define UART1_MU_MCR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x50))
+#define UART1_MU_LSR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x54))
+#define UART1_MU_MSR                ((unsigned int*)((unsigned char*)MMIO_BASE + 0x58))
+#define UART1_MU_SCRATCH            ((unsigned int*)((unsigned char*)MMIO_BASE + 0x5C))
+#define UART1_MU_CNTL               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x60))
+#define UART1_MU_STAT               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x64))
+#define UART1_MU_BAUD               ((unsigned int*)((unsigned char*)MMIO_BASE + 0x68))
 
 #endif // HW_CONFIG_H

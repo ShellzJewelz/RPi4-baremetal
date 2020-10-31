@@ -1,83 +1,506 @@
 #ifndef SYSTEM_REGISTERS_H
 #define SYSTEM_REGISTERS_H
 
-// SPSR_EL3, Saved Program Status Register
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE 
+    unsigned long int NS : 1;
+    unsigned long int IRQ : 1;
+    unsigned long int IFQ : 1;
+    unsigned long int EA : 1;
+    unsigned long int RESERVED0 : 3;
+    unsigned long int SMD : 1;
+    unsigned long int HCE : 1;
+    unsigned long int SIF : 1;
+    unsigned long int RW : 1;
+    unsigned long int ST : 1;
+    unsigned long int TWI : 1;
+    unsigned long int TWE : 1;
+    unsigned long int TLOR : 1;
+    unsigned long int TERR : 1;
+    unsigned long int APK : 1;
+    unsigned long int API : 1;
+    unsigned long int EEL2 : 1;
+    unsigned long int EASE : 1;
+    unsigned long int NMEA : 1;
+    unsigned long int FIEN : 1;
+    unsigned long int RESERVED1 : 3;
+    unsigned long int EnSCXT : 1;
+    unsigned long int ATA : 1;
+    unsigned long int FGTEn : 1;
+    unsigned long int ECVEn : 1;
+    unsigned long int TWEDEn : 1;
+    unsigned long int TWEDEL : 4;
+    unsigned long int RESERVED2 : 1;
+    unsigned long int AMVOFFEN : 1;
+    unsigned long int RESERVED3 : 27;
+#else
+    unsigned long int RESERVED3 : 27;
+    unsigned long int AMVOFFEN : 1;
+    unsigned long int RESERVED2 : 1;
+    unsigned long int TWEDEL : 4;
+    unsigned long int TWEDEn : 1;
+    unsigned long int ECVEn : 1;
+    unsigned long int FGTEn : 1;
+    unsigned long int ATA : 1;
+    unsigned long int EnSCXT : 1;
+    unsigned long int RESERVED1 : 3;
+    unsigned long int FIEN : 1;
+    unsigned long int NMEA : 1;
+    unsigned long int EASE : 1;
+    unsigned long int EEL2 : 1;
+    unsigned long int API : 1;
+    unsigned long int APK : 1;
+    unsigned long int TERR : 1;
+    unsigned long int TLOR : 1;
+    unsigned long int TWE : 1;
+    unsigned long int TWI : 1;
+    unsigned long int ST : 1;
+    unsigned long int RW : 1;
+    unsigned long int SIF : 1;
+    unsigned long int HCE : 1;
+    unsigned long int SMD : 1;
+    unsigned long int RESERVED0 : 3;
+    unsigned long int EA : 1;
+    unsigned long int IFQ : 1;
+    unsigned long int IRQ : 1;
+    unsigned long int NS : 1;
+#endif // ENDIANNESS == ENDIANNESS_LITTLE 
+} scr_el3_t;
 
-#define SPSR_EL3_D (0 << 9) // Debug exceptions are not masked
-#define SPSR_EL3_A (1 << 8) // SError interrupts are masked
-#define SPSR_EL3_I (1 << 7) // IRQ interrupts are masked
-#define SPSR_EL3_F (1 << 6) // FIQ interrupts are masked
-#define SPSR_EL3_RES0 (0 << 5)
-#define SPSR_EL3_AARCH64 (0 << 4) // Always 0 (Aarch64) 
-#define SPSR_EL3_M (9 << 0) // EL2h (EL2 with our own dedicated stack)
-#define SPSR_EL3_VALUE (SPSR_EL3_M | SPSR_EL3_AARCH64 | SPSR_EL3_RES0 | SPSR_EL3_F | \
-					    SPSR_EL3_I | SPSR_EL3_A | SPSR_EL3_D) 
+// AArch64 state register version
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int M : 4;
+    unsigned long int M_AARCH64 : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int F : 1;
+    unsigned long int I : 1;
+    unsigned long int A : 1;
+    unsigned long int D : 1;
+    unsigned long int BTYPE : 2;
+    unsigned long int SSBS : 1;
+    unsigned long int RESERVED1 : 7;
+    unsigned long int IL : 1;
+    unsigned long int SS : 1;
+    unsigned long int PAN : 1;
+    unsigned long int UAO : 1;
+    unsigned long int DIT : 1;
+    unsigned long int TCO : 1;
+    unsigned long int RESERVED2 : 2;
+    unsigned long int V : 1;
+    unsigned long int C : 1;
+    unsigned long int Z : 1;
+    unsigned long int N : 1;
+    unsigned long int RESERVED3 : 32;
+#else
+    unsigned long int RESERVED3 : 32;
+    unsigned long int N : 1;
+    unsigned long int Z : 1;
+    unsigned long int C : 1;
+    unsigned long int V : 1;
+    unsigned long int RESERVED2 : 2;
+    unsigned long int TCO : 1;
+    unsigned long int DIT : 1;
+    unsigned long int UAO : 1;
+    unsigned long int PAN : 1;
+    unsigned long int SS : 1;
+    unsigned long int IL : 1;
+    unsigned long int RESERVED1 : 7;
+    unsigned long int SSBS : 1;
+    unsigned long int BTYPE : 2;
+    unsigned long int D : 1;
+    unsigned long int A : 1;
+    unsigned long int I : 1;
+    unsigned long int F : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int M_AARCH64 : 1;
+    unsigned long int M : 4;    
+#endif // ENDIANNESS == ENDIANNESS_LITTLE     
+} spsr_el3_t;
 
-// SCR_EL3, Secure Configuration Register
+typedef enum
+{
+    SPSR_EL3_M_EL0t = 0b0000,
+    SPSR_EL3_M_EL1t = 0b0100,
+    SPSR_EL3_M_EL1h = 0b0101,
+    SPSR_EL3_M_EL2t = 0b1000,
+    SPSR_EL3_M_EL2h = 0b1001,
+    SPSR_EL3_M_EL3t = 0b1100,
+    SPSR_EL3_M_EL3h = 0b1101
+} spsr_el3_m_e;
 
-#define SCR_EL3_RW (1 << 10) // Execution state for lower level will be AArch64
-#define SCR_EL3_SIF (1 << 9) // Disable Secure Instruction Fetch
-#define SCR_EL3_HCE (1 << 8) // HCE instructions are enabled
-#define SCR_EL3_SMD (0 << 7) // SMC instructions are enabled
-#define SCR_EL3_RES (3 << 4) 
-#define SCR_EL3_EA (0 << 3)  // Don't take External aborts and SError interrupts
-#define SCR_EL3_FIQ (0 << 2) // Don't take FIQ interrupts
-#define SCR_EL3_IRQ (0 << 1) // Don't take IRQ interrupts
-#define SCR_EL3_NS (1 << 0)  // Enable Non-secure state
-#define SCR_EL3_VALUE (SCR_EL3_NS | SCR_EL3_IRQ | SCR_EL3_FIQ | SCR_EL3_EA | SCR_EL3_RES | \
-					   SCR_EL3_SMD | SCR_EL3_HCE | SCR_EL3_SIF | SCR_EL3_RW) 
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int RESERVED0 : 8;
+    unsigned long int EZ : 1;
+    unsigned long int RESERVED1 : 1;
+    unsigned long int TFP : 1;
+    unsigned long int RESERVED2 : 9;
+    unsigned long int TTA : 1;
+    unsigned long int RESERVED3 : 9;
+    unsigned long int TAM : 1;
+    unsigned long int TCPAC : 1;
+    unsigned long int RESERVED4 : 32;
+#else
+    unsigned long int RESERVED4 : 32;
+    unsigned long int TCPAC : 1;
+    unsigned long int TAM : 1;
+    unsigned long int RESERVED3 : 9;
+    unsigned long int TTA : 1;
+    unsigned long int RESERVED2 : 9;
+    unsigned long int TFP : 1;
+    unsigned long int RESERVED1 : 1;
+    unsigned long int EZ : 1;
+    unsigned long int RESERVED0 : 8;
 
-// CNTHCTL_EL2 - Counter-timer Hypervisor Control register
+#endif // ENDIANNESS == ENDIANNESS_LITTLE     
+} cptr_el3_t;
 
-#define CNTHCTL_EL2_EL1PCEN (1 << 1)  // Don't trap physical timer register access from EL0 and EL1
-#define CNTHCTL_EL2_EL1PCTEN (1 << 0) // Don't trap physical counter register access from EL0 and EL1
-#define CNTHCTL_EL2_VALUE (CNTHCTL_EL2_EL1PCTEN | CNTHCTL_EL2_EL1PCEN)
+inline void exception_level3_set_cptr(cptr_el3_t cptr_el3)
+{
+    asm ("msr cptr_el3, %0" :: "r" (cptr_el3));
+}
 
-// HCR_EL2, Hypervisor Configuration Register
+inline void exception_level3_set_scr(scr_el3_t scr_el3)
+{
+    asm ("msr scr_el3, %0" :: "r" (scr_el3));
+}
 
-#define HCR_EL2_RW (1 << 31)  // Execution state for EL1 is AArach64
-#define HCR_EL2_SWIO (1 << 0) // Data cache invalide by set/way instructions
-#define HCR_EL2_VALUE (HCR_EL2_SWIO | HCR_EL2_RW)
+inline void exception_level3_set_spsr(spsr_el3_t spsr_el3)
+{
+    asm ("msr spsr_el3, %0" :: "r" (spsr_el3));
+}
 
-// SPSR_EL2, Saved Program Status Register
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int VM : 1;
+    unsigned long int SWIO : 1;
+    unsigned long int PTW : 1;
+    unsigned long int FMO : 1;
+    unsigned long int IMO : 1;
+    unsigned long int AMO : 1;
+    unsigned long int VF : 1;
+    unsigned long int VI : 1;
+    unsigned long int VSE : 1;
+    unsigned long int FB : 1;
+    unsigned long int BSU : 2;
+    unsigned long int DC : 1;
+    unsigned long int TWI : 1;
+    unsigned long int TWE : 1;
+    unsigned long int TID0 : 1;
+    unsigned long int TID1 : 1;
+    unsigned long int TID2 : 1;
+    unsigned long int TID3 : 1;
+    unsigned long int TSC : 1;
+    unsigned long int TIDCP : 1;
+    unsigned long int TACR : 1;
+    unsigned long int TSW : 1;
+    unsigned long int TPCP : 1;
+    unsigned long int TPU : 1;
+    unsigned long int TTLB : 1;
+    unsigned long int TVM : 1;
+    unsigned long int TGE : 1;
+    unsigned long int TDZ : 1;
+    unsigned long int HCD : 1;
+    unsigned long int TRVM : 1;
+    unsigned long int RW : 1;
+    unsigned long int CD : 1;    
+    unsigned long int ID : 1;
+    unsigned long int E2H : 1;
+    unsigned long int TLOR : 1;
+    unsigned long int TERR : 1;
+    unsigned long int TEA : 1;
+    unsigned long int MIOCNCE : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int APK : 1;
+    unsigned long int API : 1;
+    unsigned long int NV : 1;
+    unsigned long int NV1 : 1;
+    unsigned long int AT : 1;
+    unsigned long int NV2 : 1;
+    unsigned long int FWB : 1;
+    unsigned long int FIEN : 1;
+    unsigned long int RESERVED1 : 1;
+    unsigned long int TID4 : 1;
+    unsigned long int TICAB : 1;
+    unsigned long int AMVOFFEN : 1;
+    unsigned long int TOCU : 1;
+    unsigned long int EnSCXT : 1;
+    unsigned long int TTLBIS : 1;
+    unsigned long int TTLBOS : 1;
+    unsigned long int ATA : 1;
+    unsigned long int DCT : 1;
+    unsigned long int TID5 : 1;
+    unsigned long int TWEDEn : 1;
+    unsigned long int TWEDEL : 4;
+#else
+    unsigned long int TWEDEL : 4;
+    unsigned long int TWEDEn : 1;
+    unsigned long int TID5 : 1;
+    unsigned long int DCT : 1;
+    unsigned long int ATA : 1;
+    unsigned long int TTLBOS : 1;
+    unsigned long int TTLBIS : 1;
+    unsigned long int EnSCXT : 1;
+    unsigned long int TOCU : 1;
+    unsigned long int AMVOFFEN : 1;
+    unsigned long int TICAB : 1;
+    unsigned long int TID4 : 1;
+    unsigned long int RESERVED1 : 1;   
+    unsigned long int FIEN : 1;
+    unsigned long int FWB : 1;
+    unsigned long int NV2 : 1;
+    unsigned long int AT : 1;
+    unsigned long int NV1 : 1;
+    unsigned long int NV : 1;
+    unsigned long int API : 1;
+    unsigned long int APK : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int MIOCNCE : 1;
+    unsigned long int TEA : 1;
+    unsigned long int TERR : 1;
+    unsigned long int TLOR : 1;
+    unsigned long int E2H : 1;
+    unsigned long int ID : 1;
+    unsigned long int CD : 1; 
+    unsigned long int RW : 1;
+    unsigned long int TRVM : 1;
+    unsigned long int HCD : 1;
+    unsigned long int TDZ : 1;
+    unsigned long int TGE : 1;
+    unsigned long int TVM : 1;
+    unsigned long int TTLB : 1;
+    unsigned long int TPU : 1;
+    unsigned long int TPCP : 1;
+    unsigned long int TSW : 1;
+    unsigned long int TACR : 1;
+    unsigned long int TIDCP : 1;
+    unsigned long int TSC : 1;
+    unsigned long int TID3 : 1;
+    unsigned long int TID2 : 1;
+    unsigned long int TID1 : 1;
+    unsigned long int TID0 : 1;
+    unsigned long int TWE : 1;
+    unsigned long int TWI : 1;
+    unsigned long int DC : 1;
+    unsigned long int BSU : 2;
+    unsigned long int FB : 1;
+    unsigned long int VSE : 1;
+    unsigned long int VI : 1;
+    unsigned long int VF : 1;
+    unsigned long int AMO : 1;
+    unsigned long int IMO : 1;
+    unsigned long int FMO : 1;
+    unsigned long int PTW : 1;
+    unsigned long int SWIO : 1;
+    unsigned long int VM : 1;    
+#endif // ENDIANNESS == ENDIANNESS_LITTLE 
+} hcr_el2_t;
 
-#define SPSR_EL2_D (0 << 9) // Debug exceptions are not masked
-#define SPSR_EL2_A (1 << 8) // SError interrupts are masked
-#define SPSR_EL2_I (1 << 7) // IRQ interrupts are masked
-#define SPSR_EL2_F (1 << 6) // FIQ interrupts are masked
-#define SPSR_EL2_RES0 (0 << 5)
-#define SPSR_EL2_AARCH64 (0 << 4) // Always 0 (Aarch64) 
-#define SPSR_EL2_M (5 << 0) // EL1h (EL1 with our own dedicated stack)
-#define SPSR_EL2_VALUE (SPSR_EL2_M | SPSR_EL2_AARCH64 | SPSR_EL2_RES0 | SPSR_EL2_F | \
-					    SPSR_EL2_I | SPSR_EL2_A | SPSR_EL2_D) 
+typedef enum
+{
+    SPSR_EL2_M_EL0t = 0b0000,
+    SPSR_EL2_M_EL1t = 0b0100,
+    SPSR_EL2_M_EL1h = 0b0101,
+    SPSR_EL2_M_EL2t = 0b1000,
+    SPSR_EL2_M_EL2h = 0b1001,
+} spsr_el2_m_e;
 
-// SCTLR_EL1, System Control Register (EL1)
+// When FEAT_VHE is not implemented
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int EL1PCTEN : 1;
+    unsigned long int EL1PCEN : 1;
+    unsigned long int EVNTEN : 1;
+    unsigned long int EVNTDIR : 1;
+    unsigned long int EVNTI : 4;
+    unsigned long int RESERVED0 : 4;
+    unsigned long int ECV : 1;
+    unsigned long int EL1TVT : 1;
+    unsigned long int EL1TVCT : 1;
+    unsigned long int EL1NVPCT : 1;
+    unsigned long int EL1NVVCT : 1;
+    unsigned long int EVNTIS : 1;
+    unsigned long int RESERVED1 : 46;
+#else
+    unsigned long int RESERVED1 : 46;
+    unsigned long int EVNTIS : 1;
+    unsigned long int EL1NVVCT : 1;
+    unsigned long int EL1NVPCT : 1;
+    unsigned long int EL1TVCT : 1;
+    unsigned long int EL1TVT : 1;
+    unsigned long int ECV : 1;
+    unsigned long int RESERVED0 : 4;
+    unsigned long int EVNTI : 4;
+    unsigned long int EVNTDIR : 1;
+    unsigned long int EVNTEN : 1;
+    unsigned long int EL1PCEN : 1;
+    unsigned long int EL1PCTEN : 1;
+#endif // ENDIANNESS == ENDIANNESS_LITTLE   
+} cnthctl_el2_t;
 
-#define SCTLR_RES1 (3 << 28) | (3 << 22) | (1 << 20) | (1 << 11)
-#define SCTLR_EL1_ENDA (0 << 27) // Pointer authentication of data addresses is disabled
-#define SCTLR_EL1_UCI (0 << 26) // Execution of the cache maintenance instructions at EL0 are trapped
-#define SCTLR_EL1_EE (0 << 25) // Explicit data accesses at EL1 are little-endian
-#define SCTLR_EL1_EOE (0 << 24) // Explicit data accesses at EL0 are little-endian
-#define SCTLR_EL1_NTWE (0 << 18) // EL0 WFE instruction traps are enabled
-#define SCTLR_EL1_RES0 (0 << 17) 
-#define SCTLR_EL1_NTWI (0 << 16) // EL0 WFI instruction traps are enabled
-#define SCTLR_EL1_ENDB (0 << 13) // Pointer authentication of data addresses is disabled
-#define SCTLR_EL1_I (0 << 12) // Instruction cache is disabled
-// #define SCTLR_EL1_EOS (1 << 11) // Exception return from EL1 is not a context synchronizing event
-#define SCTLR_EL1_UMA (0 << 9) // EL0 Access to DAIF is trapped
-#define SCTLR_EL1_NAA (0 << 6) // Non-Aligned Access faults generation AT EL1 and EL0 are enabled
-#define SCTLR_EL1_SA0 (0 << 4) // Stack alignment checks for EL0 are disabled
-#define SCTLR_EL1_SA (0 << 3) // Stack alignment checks are disabled
-#define SCTLR_EL1_C (0 << 2) // Data chache is disabled
-#define SCTLR_EL1_A (0 << 1) // Alignment checks are disabled
-#define SCTLR_EL1_M (0 << 0) // MMU is disabled
+inline void exception_level2_set_hcr(hcr_el2_t hcr_el2)
+{
+    asm ("msr hcr_el2, %0" :: "r" (hcr_el2));
+}
 
-#define SCTLR_EL1_VALUE (SCTLR_EL1_M | SCTLR_EL1_A | SCTLR_EL1_C | SCTLR_EL1_SA | SCTLR_EL1_SA0 | \
-                         SCTLR_EL1_NAA | SCTLR_EL1_UMA | SCTLR_EL1_I | SCTLR_EL1_ENDB | SCTLR_EL1_NTWI  | \
-                         SCTLR_EL1_RES0 | SCTLR_EL1_NTWE | SCTLR_EL1_EOE | SCTLR_EL1_EE | SCTLR_EL1_UCI | \
-                         SCTLR_EL1_ENDA | SCTLR_RES1)
+inline void exception_level2_set_cnthctl_el2(cnthctl_el2_t cnthctl_el2)
+{
+    asm ("msr cnthctl_el2, %0" :: "r" (cnthctl_el2));
+}
 
-#define CPACR_EL1_FPEN (3 << 20) // SVE, Advanced SIMD, and floating-point registers are enabled
-#define CPACR_EL1_VALUE (CPACR_EL1_FPEN)
+inline cnthctl_el2_t exception_level2_get_cnthctl_el2()
+{
+    cnthctl_el2_t cnthctl_el2;
+    asm ("mrs %0, cnthctl_el2" : "=r" (cnthctl_el2));
+    return cnthctl_el2;
+}
+
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int M : 1;
+    unsigned long int A : 1;
+    unsigned long int C : 1;
+    unsigned long int SA : 1;
+    unsigned long int SA0 : 1;
+    unsigned long int CP15BEN : 1;
+    unsigned long int nAA : 1;
+    unsigned long int ITD : 1;
+    unsigned long int SED : 1;
+    unsigned long int UMA : 1;
+    unsigned long int EnRCTX : 1;
+    unsigned long int EOS : 1;
+    unsigned long int I : 1;
+    unsigned long int EnDB : 1;
+    unsigned long int DZE : 1;
+    unsigned long int UCT : 1;
+    unsigned long int nTWI : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int nTWE : 1;
+    unsigned long int WXN : 1;
+    unsigned long int TSCXT : 1;
+    unsigned long int IESB : 1;
+    unsigned long int EIS : 1;
+    unsigned long int SPAN : 1;
+    unsigned long int EOE : 1;
+    unsigned long int EE : 1;
+    unsigned long int UCI : 1;
+    unsigned long int EnDA : 1;
+    unsigned long int nTLSMD : 1;
+    unsigned long int LSMAOE : 1;
+    unsigned long int EnIB : 1;
+    unsigned long int EnIA : 1;
+    unsigned long int RESERVED1 : 3;
+    unsigned long int BT0 : 1;
+    unsigned long int BT1 : 1;
+    unsigned long int ITFSB : 1;
+    unsigned long int TCF0 : 2;
+    unsigned long int TCF : 2;
+    unsigned long int ATA0 : 1;
+    unsigned long int ATA : 1;
+    unsigned long int DSSBS : 1;
+    unsigned long int TWEDEn : 1;
+    unsigned long int TWEDEL : 4;
+    unsigned long int TMT0 : 1;
+    unsigned long int TMT : 1;
+    unsigned long int TME0 : 1;
+    unsigned long int TME : 1;
+    unsigned long int RESERVED2 : 10;
+#else
+    unsigned long int RESERVED2 : 10;
+    unsigned long int TME : 1;
+    unsigned long int TME0 : 1;
+    unsigned long int TMT : 1;
+    unsigned long int TMT0 : 1;
+    unsigned long int TWEDEL : 4;
+    unsigned long int TWEDEn : 1;
+    unsigned long int DSSBS : 1;
+    unsigned long int ATA : 1;
+    unsigned long int ATA0 : 1;
+    unsigned long int TCF : 2;
+    unsigned long int TCF0 : 2;
+    unsigned long int ITFSB : 1;
+    unsigned long int BT1 : 1;
+    unsigned long int BT0 : 1;
+    unsigned long int RESERVED1 : 3;
+    unsigned long int EnIA : 1;
+    unsigned long int EnIB : 1;
+    unsigned long int LSMAOE : 1;
+    unsigned long int nTLSMD : 1;
+    unsigned long int EnDA : 1;
+    unsigned long int UCI : 1;
+    unsigned long int EE : 1;
+    unsigned long int EOE : 1;
+    unsigned long int SPAN : 1;
+    unsigned long int EIS : 1;
+    unsigned long int IESB : 1;
+    unsigned long int TSCXT : 1;
+    unsigned long int WXN : 1;
+    unsigned long int nTWE : 1;
+    unsigned long int RESERVED0 : 1;
+    unsigned long int nTWI : 1;
+    unsigned long int UCT : 1;
+    unsigned long int DZE : 1;
+    unsigned long int EnDB : 1;
+    unsigned long int I : 1;
+    unsigned long int EOS : 1;
+    unsigned long int EnRCTX : 1;
+    unsigned long int UMA : 1;
+    unsigned long int SED : 1;
+    unsigned long int ITD : 1;
+    unsigned long int nAA : 1;
+    unsigned long int CP15BEN : 1;
+    unsigned long int SA0 : 1;
+    unsigned long int SA : 1;
+    unsigned long int C : 1;
+    unsigned long int A : 1;
+    unsigned long int M : 1;
+#endif // ENDIANNESS == ENDIANNESS_LITTLE     
+} sctlr_el1_t;
+
+typedef struct
+{
+#if ENDIANNESS == ENDIANNESS_LITTLE
+    unsigned long int RESERVED0 : 16;
+    unsigned long int ZEN : 2;
+    unsigned long int RESERVED1 : 2;
+    unsigned long int FPEN : 2;
+    unsigned long int RESERVED2 : 6;
+    unsigned long int TTA : 1;
+    unsigned long int RESERVED3 : 35;
+#else
+    unsigned long int RESERVED3 : 35;
+    unsigned long int TTA : 1;
+    unsigned long int RESERVED2 : 6;
+    unsigned long int FPEN : 2;
+    unsigned long int RESERVED1 : 2;
+    unsigned long int ZEN : 2;
+    unsigned long int RESERVED0 : 16;
+#endif // ENDIANNESS == ENDIANNESS_LITTLE     
+} cpacr_el1_t;
+
+typedef enum
+{
+    CPACR_EL1_FPEN_EL0_EL1_TRAPPED = 0b00,
+    CPACR_EL1_FPEN_EL0_TRAPPED_EL1_NOT_TRAPPED = 0b01,
+    CPACR_EL1_FPEN_EL0_EL1_TRAPPED2 = 0b10,
+    CPACR_EL1_FPEN_EL0_EL1_NOT_TRAPPED = 0b11
+} cpacr_el1_fpen_e;
+
+inline void exception_level1_set_sctlr(sctlr_el1_t sctlr_el1)
+{
+    asm ("msr sctlr_el1, %0" :: "r" (sctlr_el1));
+}
+
+inline void exception_level1_set_cpacr(cpacr_el1_t cpacr_el1)
+{
+    asm ("msr cpacr_el1, %0" :: "r" (cpacr_el1));
+}
 
 #endif // SYSTEM_REGISTERS_H
