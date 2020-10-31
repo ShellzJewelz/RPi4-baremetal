@@ -1,7 +1,7 @@
 #include "frame_buffer.h"
-#include "mem.h"
-#include "uart.h"
 #include "mailbox.h"
+#include "utils.h"
+#include "hw_config.h"
 
 /* PC Screen Font as used by Linux Console */
 typedef struct 
@@ -33,7 +33,6 @@ static void frame_buffer_scroll_up();
 void frame_buffer_init()
 {
     unsigned int __attribute__((aligned(16))) mailbox_messages[36];
-    // unsigned int* mailbox_messages = (unsigned int*)mem_alloc();
 
     mailbox_messages[0] = 35*4;
     mailbox_messages[1] = MAILBOX_TYPE_REQUEST;
@@ -92,12 +91,6 @@ void frame_buffer_init()
         x = 0;
         y = 0;
     }
-    else 
-    {
-        uart_puts("Unable to set screen resolution to 1024x768x32\n");
-    }
-
-    //mem_free(mailbox_messages);
 }
 
 void frame_buffer_putc(const char c)
@@ -130,6 +123,11 @@ void frame_buffer_putc(const char c)
 
         x += (g_font->width + 1);
     }
+}
+
+void frame_buffer_printf_putc(void* p, char c)
+{
+    frame_buffer_putc(c);
 }
 
 /**
@@ -197,14 +195,8 @@ static void frame_buffer_scroll_up()
     unsigned char* frame_buffer_line_before_last = g_frame_buffer_base + (((g_height - 1 - g_font->height) * g_pitch) + (0 * 4));
 
     // Scroll all lines by 1 line up
-    for (; frame_buffer_from != g_frame_buffer_end; frame_buffer_to += 1, frame_buffer_from += 1)
-    {
-        *frame_buffer_to = *frame_buffer_from;
-    }
+    memcpy((void*)frame_buffer_to, (void*)frame_buffer_from, g_frame_buffer_end - frame_buffer_from);
 
     // Clear the last line
-    for (; frame_buffer_line_before_last != g_frame_buffer_end; frame_buffer_line_before_last += 1)
-    {
-        *frame_buffer_line_before_last = 0x0;
-    }
+    memzero((void*)frame_buffer_line_before_last, g_frame_buffer_end - frame_buffer_line_before_last);
 }
