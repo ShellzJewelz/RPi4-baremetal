@@ -21,17 +21,6 @@ typedef enum mailbox_tags
     MAILBOX_TAG_LAST = 0
 } mailbox_tags_e;
 
-typedef struct mailbox
-{
-    unsigned int read;
-    unsigned int reserved[0x4];
-    unsigned int poll;
-    unsigned int sender;
-    unsigned int status;
-    unsigned int config;
-    unsigned int write;
-} __attribute__((packed)) mailbox_t;
-
 typedef enum mailbox_channel
 {
     MAILBOX_CHANNEL_POWER       = 0,

@@ -1,12 +1,10 @@
 #include "mailbox.h"
 #include "hw_config.h"
 #include "timer.h"
-#include "uart.h"
+#include "utils.h"
 
 #define MAILBOX_STATUS_FULL  (0x80000000)
 #define MAILBOX_STATUS_EMPTY (0x40000000)
-
-static mailbox_t* g_videocore_mailbox = (mailbox_t*)VIDEOCORE_MAILBOX;
 
 static void inline mailbox_wait_while_flag(unsigned int flag);
 static void inline mailbox_wait_while_full();
@@ -50,7 +48,7 @@ static void inline mailbox_wait_while_empty()
 
 static void inline mailbox_wait_while_flag(unsigned int flag)
 {
-    while (g_videocore_mailbox->status & flag)
+    while (read32(VIDEOCORE_MAILBOX_STATUS) & flag)
     {
         timer_wait_single_cycle();
     }    
@@ -59,11 +57,11 @@ static void inline mailbox_wait_while_flag(unsigned int flag)
 static void inline mailbox_write_data(unsigned int data)
 {
     mailbox_wait_while_full();
-    g_videocore_mailbox->write = data;
+    write32(VIDEOCORE_MAILBOX_WRITE, data);
 }
 
 static unsigned int inline mailbox_read_data()
 {
     mailbox_wait_while_empty();
-    return g_videocore_mailbox->read;
+    return read32(VIDEOCORE_MAILBOX_READ);
 }
