@@ -21,9 +21,8 @@ void uart_init(unsigned int baud_rate)
     // Disable RTS
     write32(UART1_MU_MCR, 0);
     // Enable FIFO, Clear FIFO
-    write32(UART1_MU_IIR, 0xC6);   
-    // 115200 = system clock 250MHz / (8 * (baud + 1)), baud = 270
-    r = ((250000000 / baud_rate) / 8) - 1;
+    write32(UART1_MU_IIR, 0xC6);
+    r = ((GPU_CORE_FREQUENCY / baud_rate) / 8) - 1;
     write32(UART1_MU_BAUD, r);
 
     /* map UART1 to GPIO pins */
@@ -54,7 +53,7 @@ void uart_init(unsigned int baud_rate)
 /**
  * Send a character
  */
-void uart_putc(unsigned char c) 
+void uart_putc(const unsigned char c) 
 {
     /* wait until we can send */
     do
@@ -63,6 +62,11 @@ void uart_putc(unsigned char c)
     } while (!(read32(UART1_MU_LSR) & (1 << 5)));
     /* write the character to the buffer */
     write32(UART1_MU_IO, c);
+}
+
+void uart_putc(void*, const char c)
+{
+    uart_putc((const unsigned char)c);
 }
 
 /**
@@ -97,47 +101,5 @@ void uart_puts(const char* s)
 
         uart_putc(*s);
         s++;
-    }
-}
-
-void uart_puti(long int number, int base)
-{
-    int remainder_index = 0;
-    int remainder = 0;
-    char string[10];
-    
-    if (number < 0 && base == 10)
-    {
-        uart_putc('-');
-        number = -number;
-    }
-
-    if (number == 0)
-    {
-        uart_putc('0');
-    }
-
-    while (number != 0)
-    {
-        remainder = number % base;
-        string[remainder_index] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
-        remainder_index++;
-        number = number / base;
-    }
-
-    for (remainder_index -= 1; remainder_index >= 0; remainder_index--)
-    {
-        uart_putc(string[remainder_index]);
-    }
-}
-
-void uart_putmem(const unsigned char* src, unsigned int size, int base)
-{
-    while (size)
-    {
-        uart_puti(*src, base);
-        uart_putc(' ');
-        src++;
-        size--;
     }
 }
